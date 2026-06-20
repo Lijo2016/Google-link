@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Szerencsetorony</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:linear-gradient(#111,#222,#111);
+    color:white;
+    text-align:center;
+}
+
+h1{
+    margin-top:20px;
+    font-size:48px;
+}
+
+#tower{
+    font-size:40px;
+    margin:20px;
+    color:gold;
+}
+
+#info{
+    display:flex;
+    justify-content:center;
+    gap:60px;
+    font-size:28px;
+    margin-bottom:25px;
+    flex-wrap:wrap;
+}
+
+#doors{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin-top:20px;
+    flex-wrap:wrap;
+}
+
+button{
+    font-size:32px;
+    width:220px;
+    height:140px;
+    border-radius:15px;
+    border:none;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+#cashout{
+    margin-top:35px;
+    background:gold;
+}
+
+#message{
+    margin-top:35px;
+    font-size:34px;
+    min-height:50px;
+}
+
+#restart{
+    display:none;
+    margin:auto;
+    margin-top:30px;
+    background:#44cc44;
+}
+
+</style>
+</head>
+<body>
+
+<h1>🏰 SZERENCSETORONY 🏰</h1>
+
+<div id="tower">
+Emelet: <span id="floor">1</span> / 20
+</div>
+
+<div id="info">
+<div>💰 Nyeremény: <span id="money">100</span></div>
+<div>🏆 Legjobb: <span id="best">0</span></div>
+</div>
+
+<div id="doors">
+
+<button onclick="pick(0)">🚪 1</button>
+<button onclick="pick(1)">🚪 2</button>
+<button onclick="pick(2)">🚪 3</button>
+
+</div>
+
+<button id="cashout" onclick="cashOut()">
+💰 Kiszállok
+</button>
+
+<div id="message"></div>
+
+<button id="restart" onclick="startGame()">
+🔄 Új játék
+</button>
+
+<script>
+
+const MAX_FLOOR = 20;
+
+const rewards = [
+100,
+250,
+500,
+800,
+1200,
+1800,
+2600,
+3800,
+5500,
+8000,
+12000,
+18000,
+27000,
+40000,
+60000,
+90000,
+140000,
+220000,
+500000,
+1000000
+];
+
+let floor = 1;
+let best = localStorage.getItem("tower_best") || 0;
+
+document.getElementById("best").textContent = best;
+
+let mapping = [];
+
+function shuffle(arr){
+
+    for(let i=arr.length-1;i>0;i--){
+
+        let j=Math.floor(Math.random()*(i+1));
+
+        [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+
+}
+
+function newDoors(){
+
+    mapping=["safe","jump","trap"];
+
+    shuffle(mapping);
+
+}
+
+function update(){
+
+    document.getElementById("floor").textContent=floor;
+
+    document.getElementById("money").textContent=
+        rewards[Math.min(floor-1,rewards.length-1)].toLocaleString()+" Ft";
+
+}
+
+function startGame(){
+
+    floor=1;
+
+    document.getElementById("message").textContent="";
+
+    document.getElementById("restart").style.display="none";
+
+    document.getElementById("doors").style.display="flex";
+
+    document.getElementById("cashout").style.display="inline-block";
+
+    newDoors();
+
+    update();
+
+}
+
+function pick(index){
+
+    let action=mapping[index];
+
+    if(action==="trap"){
+
+        endGame(
+        "💀 Csapda! Minden elveszett!"
+        );
+
+        return;
+
+    }
+
+    if(action==="safe"){
+
+        floor++;
+
+        document.getElementById("message").textContent=
+        "🙂 Biztonságos ajtó! +1 emelet.";
+
+    }
+
+    if(action==="jump"){
+
+        let jump=Math.floor(Math.random()*4)+2;
+
+        floor+=jump;
+
+        if(floor>MAX_FLOOR)
+            floor=MAX_FLOOR;
+
+        document.getElementById("message").textContent=
+        "🚀 Szuperugrás! +" + jump + " emelet!";
+
+    }
+
+    if(floor>=MAX_FLOOR){
+
+        winGame();
+
+        return;
+
+    }
+
+    newDoors();
+
+    update();
+
+}
+
+function cashOut(){
+
+    let prize=rewards[floor-1];
+
+    if(prize>best){
+
+        best=prize;
+
+        localStorage.setItem("tower_best",best);
+
+        document.getElementById("best").textContent=best;
+
+    }
+
+    endGame(
+    "🎉 Kiszálltál! Megnyerted: "+
+    prize.toLocaleString()+" Ft"
+    );
+
+}
+
+function winGame(){
+
+    let prize=rewards[rewards.length-1];
+
+    if(prize>best){
+
+        best=prize;
+
+        localStorage.setItem("tower_best",best);
+
+        document.getElementById("best").textContent=best;
+
+    }
+
+    endGame(
+    "👑 Feljutottál a torony tetejére! Fődíj: "+
+    prize.toLocaleString()+" Ft"
+    );
+
+}
+
+function endGame(text){
+
+    document.getElementById("message").textContent=text;
+
+    document.getElementById("doors").style.display="none";
+
+    document.getElementById("cashout").style.display="none";
+
+    document.getElementById("restart").style.display="inline-block";
+
+}
+
+startGame();
+
+</script>
+
+</body>
+</html>
